@@ -11,23 +11,26 @@ type User struct {
 }
 
 func main() {
-	// user1 := User{Name: "Ivan", Id: 222}
-	// bytes, _ := json.Marshal(user1)
-	// bytes1, _ := json.MarshalIndent(user1, "", "  ") //second way with Tab
-	// fmt.Println(string(bytes))
-	// fmt.Println(string(bytes1))
-
 	http.HandleFunc("/user", UserHandler)
 	http.ListenAndServe(":3000", nil)
 }
 
+func WriteJson(w http.ResponseWriter, status int, v any) error {
+	w.Header().Set("Content-Type", "application/json; chraset=utf-8")
+	return json.NewEncoder(w).Encode(v)
+}
+
 func UserHandler(w http.ResponseWriter, r *http.Request) {
 	user1 := User{Name: "Ivan", Id: 222}
-	bytes, err := json.Marshal(user1)
+
+	err := WriteJson(w, http.StatusOK, user1)
+
 	if err != nil {
-		w.Write([]byte("500 Internal Server Error" + err.Error()))
+		WriteJson(w, http.StatusInternalServerError, map[string]any{
+			"ok":    false,
+			"error": err.Error(),
+		})
 		return
 	}
-	w.Header().Set("ContentType", "application/json")
-	w.Write(bytes)
+
 }
