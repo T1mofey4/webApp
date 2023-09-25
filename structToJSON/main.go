@@ -32,5 +32,4 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
 }

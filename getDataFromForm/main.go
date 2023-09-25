@@ -19,5 +19,7 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	io.WriteString(w, "OK")
+	foo := r.FormValue("foo")
+
+	io.WriteString(w, "OK "+foo)
 }
