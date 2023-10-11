@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -10,8 +11,16 @@ func main() {
 	mux.HandleFunc("/", HomeHandler)
 	mux.HandleFunc("/foo", FooHandler)
 
-	handler := MyMiddleWare(mux)
-	handler = SecondMiddleWare(handler)
+	middlewares := []func(http.Handler) http.Handler{
+		LoggingMiddleware,
+		SecondMiddleware,
+	}
+
+	handler := http.Handler(mux)
+
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		handler = middlewares[i](handler)
+	}
 
 	err := http.ListenAndServe(":3000", handler)
 	if err != nil {
@@ -29,18 +38,15 @@ func FooHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("foo"))
 }
 
-func SecondMiddleWare(handler http.Handler) http.Handler {
+func LoggingMiddleware(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("before2")
 		handler.ServeHTTP(w, r)
-		fmt.Println("after2")
+		log.Printf("%s\n", r.RequestURI)
 	})
 }
 
-func MyMiddleWare(handler http.Handler) http.Handler {
+func SecondMiddleware(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("before")
 		handler.ServeHTTP(w, r)
-		fmt.Println("after")
 	})
 }
